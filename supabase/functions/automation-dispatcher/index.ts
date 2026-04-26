@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const DISPATCHER_SECRET_ENV = Deno.env.get("DISPATCHER_SECRET") ?? "";
 
 interface ScheduleRow {
   user_id: string;
@@ -77,6 +78,26 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // Require shared secret — only the pg_cron job (or service callers) may invoke this.
+  const providedSecret = req.headers.get("x-dispatcher-secret") ?? "";
+  const isServiceCall = req.headers.get("x-internal-secret") === SUPABASE_SERVICE_ROLE_KEY;
+
+  // Look up the secret from app_config (source of truth) and fall back to env.
+  let expectedSecret = DISPATCHER_SECRET_ENV;
+  const { data: cfg } = await admin
+    .from("app_config")
+    .select("value")
+    .eq("key", "dispatcher_secret")
+    .maybeSingle();
+  if (cfg?.value) expectedSecret = cfg.value;
+
+  if (!isServiceCall && (!expectedSecret || providedSecret !== expectedSecret)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const [{ data: emailRows }, { data: webhookRows }] = await Promise.all([
