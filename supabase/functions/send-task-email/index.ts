@@ -1,7 +1,7 @@
 // Sends a task priority digest email via Resend.
 // Triggers: manual "send now" / "test" from UI, or scheduled by automation-dispatcher.
 
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { renderDigestHtml, renderDigestText, type DigestTask } from "../_shared/digest-template.ts";
 

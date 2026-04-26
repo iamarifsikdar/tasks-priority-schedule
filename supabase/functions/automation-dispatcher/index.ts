@@ -1,7 +1,7 @@
 // Cron-triggered every 5 min. Finds users whose digest is due now (in their timezone)
 // and invokes send-task-email / send-task-webhook for each. Prevents duplicate sends per day.
 
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
