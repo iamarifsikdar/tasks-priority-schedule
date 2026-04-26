@@ -19,9 +19,9 @@ async function getUserId(req: Request): Promise<string | null> {
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: auth } },
   });
-  const token = auth.replace("Bearer ", "");
-  const { data } = await sb.auth.getClaims(token);
-  return (data?.claims?.sub as string) ?? null;
+  const { data, error } = await sb.auth.getUser();
+  if (error) return null;
+  return data.user?.id ?? null;
 }
 
 Deno.serve(async (req) => {
