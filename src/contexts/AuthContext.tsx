@@ -17,21 +17,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1) Set up listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s); setUser(s?.user ?? null);
     });
-    // 2) THEN check existing session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      setLoading(false);
+      setSession(s); setUser(s?.user ?? null); setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
+    localStorage.removeItem("tps:current_org");
     await supabase.auth.signOut();
   };
 
