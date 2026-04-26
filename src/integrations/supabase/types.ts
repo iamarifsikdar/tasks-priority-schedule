@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_reads: {
+        Row: {
+          announcement_id: string
+          id: string
+          org_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          org_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          org_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_reads_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_reads_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          author_id: string
+          category: Database["public"]["Enums"]["announcement_category"]
+          content: string | null
+          created_at: string
+          id: string
+          org_id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          category?: Database["public"]["Enums"]["announcement_category"]
+          content?: string | null
+          created_at?: string
+          id?: string
+          org_id: string
+          pinned?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          category?: Database["public"]["Enums"]["announcement_category"]
+          content?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_config: {
         Row: {
           key: string
@@ -36,86 +119,305 @@ export type Database = {
         Row: {
           error_message: string | null
           id: string
+          org_id: string
           response: Json | null
           sent_at: string
-          status: Database["public"]["Enums"]["automation_status"]
+          status: Database["public"]["Enums"]["automation_log_status"]
           task_count: number | null
           triggered_by: string | null
-          type: Database["public"]["Enums"]["automation_type"]
-          user_id: string
+          type: Database["public"]["Enums"]["automation_log_type"]
+          user_id: string | null
         }
         Insert: {
           error_message?: string | null
           id?: string
+          org_id: string
           response?: Json | null
           sent_at?: string
-          status: Database["public"]["Enums"]["automation_status"]
+          status: Database["public"]["Enums"]["automation_log_status"]
           task_count?: number | null
           triggered_by?: string | null
-          type: Database["public"]["Enums"]["automation_type"]
-          user_id: string
+          type: Database["public"]["Enums"]["automation_log_type"]
+          user_id?: string | null
         }
         Update: {
           error_message?: string | null
           id?: string
+          org_id?: string
           response?: Json | null
           sent_at?: string
-          status?: Database["public"]["Enums"]["automation_status"]
+          status?: Database["public"]["Enums"]["automation_log_status"]
           task_count?: number | null
           triggered_by?: string | null
-          type?: Database["public"]["Enums"]["automation_type"]
-          user_id?: string
+          type?: Database["public"]["Enums"]["automation_log_type"]
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      email_automation_settings: {
+      invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          expires_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: Database["public"]["Enums"]["invite_status"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["invite_status"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          expires_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: Database["public"]["Enums"]["invite_status"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_schedules: {
         Row: {
           created_at: string
-          email_subject: string
-          enabled: boolean
+          email_enabled: boolean
           id: string
-          last_error: string | null
-          last_sent_at: string | null
-          last_sent_date: string | null
-          last_status: string | null
-          recipient_email: string
+          last_email_error: string | null
+          last_email_sent_at: string | null
+          last_email_sent_date: string | null
+          last_email_status: string | null
+          last_webhook_error: string | null
+          last_webhook_sent_at: string | null
+          last_webhook_sent_date: string | null
+          last_webhook_status: string | null
+          org_id: string
+          recipient_email: string | null
           selected_days: number[]
           send_time: string
           timezone: string
           updated_at: string
           user_id: string
+          webhook_enabled: boolean
         }
         Insert: {
           created_at?: string
-          email_subject?: string
-          enabled?: boolean
+          email_enabled?: boolean
           id?: string
-          last_error?: string | null
-          last_sent_at?: string | null
-          last_sent_date?: string | null
-          last_status?: string | null
-          recipient_email: string
+          last_email_error?: string | null
+          last_email_sent_at?: string | null
+          last_email_sent_date?: string | null
+          last_email_status?: string | null
+          last_webhook_error?: string | null
+          last_webhook_sent_at?: string | null
+          last_webhook_sent_date?: string | null
+          last_webhook_status?: string | null
+          org_id: string
+          recipient_email?: string | null
           selected_days?: number[]
           send_time?: string
           timezone?: string
           updated_at?: string
           user_id: string
+          webhook_enabled?: boolean
         }
         Update: {
           created_at?: string
-          email_subject?: string
-          enabled?: boolean
+          email_enabled?: boolean
           id?: string
-          last_error?: string | null
-          last_sent_at?: string | null
-          last_sent_date?: string | null
-          last_status?: string | null
-          recipient_email?: string
+          last_email_error?: string | null
+          last_email_sent_at?: string | null
+          last_email_sent_date?: string | null
+          last_email_status?: string | null
+          last_webhook_error?: string | null
+          last_webhook_sent_at?: string | null
+          last_webhook_sent_date?: string | null
+          last_webhook_status?: string | null
+          org_id?: string
+          recipient_email?: string | null
           selected_days?: number[]
           send_time?: string
           timezone?: string
           updated_at?: string
           user_id?: string
+          webhook_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_schedules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_email_automation: {
+        Row: {
+          created_at: string
+          default_recipient: string | null
+          email_subject: string
+          enabled: boolean
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_recipient?: string | null
+          email_subject?: string
+          enabled?: boolean
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_recipient?: string | null
+          email_subject?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_email_automation_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_webhook_automation: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          org_id: string
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id: string
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_webhook_automation_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          owner_id?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -149,118 +451,161 @@ export type Database = {
         }
         Relationships: []
       }
+      task_assignments: {
+        Row: {
+          assigned_by: string
+          assignee_id: string
+          created_at: string
+          id: string
+          org_id: string
+          task_id: string
+        }
+        Insert: {
+          assigned_by: string
+          assignee_id: string
+          created_at?: string
+          id?: string
+          org_id: string
+          task_id: string
+        }
+        Update: {
+          assigned_by?: string
+          assignee_id?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           completed_at: string | null
           created_at: string
+          created_by: string
           description: string | null
           due_date: string | null
           id: string
           is_recurring: boolean
           notes: string | null
+          org_id: string
           position: number
           priority: Database["public"]["Enums"]["task_priority"]
           recurrence_pattern: string | null
           status: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          created_by: string
           description?: string | null
           due_date?: string | null
           id?: string
           is_recurring?: boolean
           notes?: string | null
+          org_id: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
           recurrence_pattern?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          created_by?: string
           description?: string | null
           due_date?: string | null
           id?: string
           is_recurring?: boolean
           notes?: string | null
+          org_id?: string
           position?: number
           priority?: Database["public"]["Enums"]["task_priority"]
           recurrence_pattern?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
-          user_id?: string
         }
-        Relationships: []
-      }
-      webhook_settings: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          id: string
-          last_error: string | null
-          last_sent_at: string | null
-          last_sent_date: string | null
-          last_status: string | null
-          selected_days: number[]
-          send_time: string
-          timezone: string
-          updated_at: string
-          use_email_schedule: boolean
-          user_id: string
-          webhook_url: string | null
-        }
-        Insert: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          last_error?: string | null
-          last_sent_at?: string | null
-          last_sent_date?: string | null
-          last_status?: string | null
-          selected_days?: number[]
-          send_time?: string
-          timezone?: string
-          updated_at?: string
-          use_email_schedule?: boolean
-          user_id: string
-          webhook_url?: string | null
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          last_error?: string | null
-          last_sent_at?: string | null
-          last_sent_date?: string | null
-          last_status?: string | null
-          selected_days?: number[]
-          send_time?: string
-          timezone?: string
-          updated_at?: string
-          use_email_schedule?: boolean
-          user_id?: string
-          webhook_url?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invite: { Args: { _token: string }; Returns: string }
+      get_user_role: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_task_assignee: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
+      join_org_by_code: { Args: { _code: string }; Returns: string }
+      lookup_invite: {
+        Args: { _token: string }
+        Returns: {
+          expires_at: string
+          invite_id: string
+          org_id: string
+          org_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: Database["public"]["Enums"]["invite_status"]
+        }[]
+      }
     }
     Enums: {
+      announcement_category:
+        | "very_important"
+        | "important"
+        | "less_important"
+        | "new_features"
+      app_role: "owner" | "admin" | "team_manager" | "member"
+      automation_log_status: "success" | "error"
+      automation_log_type: "email" | "webhook"
       automation_status: "success" | "error" | "skipped"
       automation_type: "email" | "webhook"
+      invite_status: "pending" | "accepted" | "revoked" | "expired"
       task_priority: "urgent" | "high" | "medium" | "low"
       task_status: "pending" | "completed" | "archived"
     }
@@ -390,8 +735,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      announcement_category: [
+        "very_important",
+        "important",
+        "less_important",
+        "new_features",
+      ],
+      app_role: ["owner", "admin", "team_manager", "member"],
+      automation_log_status: ["success", "error"],
+      automation_log_type: ["email", "webhook"],
       automation_status: ["success", "error", "skipped"],
       automation_type: ["email", "webhook"],
+      invite_status: ["pending", "accepted", "revoked", "expired"],
       task_priority: ["urgent", "high", "medium", "low"],
       task_status: ["pending", "completed", "archived"],
     },
