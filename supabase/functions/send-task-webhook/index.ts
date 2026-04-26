@@ -10,7 +10,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 interface SendRequest {
   user_id?: string;
   trigger?: "manual" | "test" | "scheduler";
-  override_url?: string; // for test sends
 }
 
 async function getUserId(req: Request): Promise<string | null> {
@@ -22,6 +21,48 @@ async function getUserId(req: Request): Promise<string | null> {
   const { data, error } = await sb.auth.getUser();
   if (error) return null;
   return data.user?.id ?? null;
+}
+
+// Allowlist of trusted automation/webhook providers.
+// Add more domains here as needed (subdomains are allowed via endsWith).
+const ALLOWED_WEBHOOK_HOSTS = [
+  "pabbly.com",
+  "connect.pabbly.com",
+  "hook.eu1.make.com",
+  "hook.eu2.make.com",
+  "hook.us1.make.com",
+  "hook.us2.make.com",
+  "hook.integromat.com",
+  "hooks.zapier.com",
+  "zapier.com",
+  "n8n.cloud",
+  "webhook.site",
+];
+
+function isWebhookUrlAllowed(rawUrl: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.toLowerCase();
+  // Block obvious internal / metadata targets defensively
+  if (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host.startsWith("127.") ||
+    host.startsWith("10.") ||
+    host.startsWith("169.254.") ||
+    host.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  ) {
+    return false;
+  }
+  return ALLOWED_WEBHOOK_HOSTS.some(
+    (allowed) => host === allowed || host.endsWith(`.${allowed}`),
+  );
 }
 
 Deno.serve(async (req) => {
@@ -65,12 +106,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const url = body.override_url || settings.webhook_url;
+    const url = settings.webhook_url;
     if (!url) {
       return new Response(JSON.stringify({ error: "Webhook URL not configured" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (!isWebhookUrlAllowed(url)) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Webhook URL is not allowed. Must be HTTPS and from a supported provider (Pabbly, Make, Zapier, n8n, webhook.site).",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const { data: tasks } = await admin
