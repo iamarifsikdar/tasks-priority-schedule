@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Zap, Mail, Webhook, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Sparkles, Zap, Users, Webhook, ArrowRight, LayoutDashboard } from "lucide-react";
 
 export default function Landing() {
+  const { user, loading } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
@@ -12,40 +14,45 @@ export default function Landing() {
             <span className="font-semibold tracking-tight">Task Priority Scheduler</span>
           </div>
           <div className="flex gap-2">
-            <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link to="/auth"><Button size="sm">Get started</Button></Link>
+            {loading ? null : user ? (
+              <Link to="/app"><Button size="sm" className="gap-2"><LayoutDashboard className="h-4 w-4" />Go to dashboard</Button></Link>
+            ) : (
+              <>
+                <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
+                <Link to="/auth"><Button size="sm">Get started</Button></Link>
+              </>
+            )}
           </div>
         </div>
       </header>
 
       <section className="max-w-4xl mx-auto px-6 py-20 lg:py-28 text-center space-y-6 animate-fade-in">
         <div className="inline-flex items-center gap-2 rounded-full border border-priority-urgent-border bg-priority-urgent-bg px-3 py-1 text-xs font-medium text-priority-urgent">
-          <Sparkles className="h-3 w-3" /> A focused workday, every day
+          <Sparkles className="h-3 w-3" /> Multi-tenant team productivity
         </div>
         <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
           Prioritize what matters.<br />
-          <span className="bg-gradient-to-r from-priority-urgent to-warning bg-clip-text text-transparent">
-            Automate the rest.
-          </span>
+          <span className="bg-gradient-to-r from-priority-urgent to-warning bg-clip-text text-transparent">Together.</span>
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Capture tasks, sort by urgency, and get scheduled email digests + webhook
-          deliveries on the days you choose. A premium task system you'd actually pay for.
+          Organizations, roles, assignments, announcements, and scheduled email & webhook digests — all in one premium SaaS.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
-          <Link to="/auth"><Button size="lg" className="gap-2">Start free <ArrowRight className="h-4 w-4" /></Button></Link>
+          {user ? (
+            <Link to="/app"><Button size="lg" className="gap-2">Go to dashboard <ArrowRight className="h-4 w-4" /></Button></Link>
+          ) : (
+            <Link to="/auth"><Button size="lg" className="gap-2">Start free <ArrowRight className="h-4 w-4" /></Button></Link>
+          )}
         </div>
       </section>
 
       <section className="max-w-5xl mx-auto px-6 pb-24 grid md:grid-cols-3 gap-4">
-        <Feature icon={<Zap className="h-5 w-5" />} title="Priority-first sorting" description="Urgent tasks stay pinned. High → Medium → Low — newest first. Automatic." />
-        <Feature icon={<Mail className="h-5 w-5" />} title="Beautiful email digests" description="Recurring HTML emails grouped by priority. Pick days, set time, done." />
-        <Feature icon={<Webhook className="h-5 w-5" />} title="Webhook automation" description="Pipe structured task variables to Pabbly or any endpoint on schedule." />
+        <Feature icon={<Users className="h-5 w-5" />} title="Teams & roles" description="Owner, Admin, Team Manager, Member — invites, codes, role-based access." />
+        <Feature icon={<Zap className="h-5 w-5" />} title="Priority-first tasks" description="Assign to teammates, sort by urgency, track progress." />
+        <Feature icon={<Webhook className="h-5 w-5" />} title="Email & webhook automation" description="Scheduled digests, Pabbly/Zapier/Make integrations." />
       </section>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Task Priority Scheduler
-      </footer>
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Task Priority Scheduler</footer>
     </div>
   );
 }
