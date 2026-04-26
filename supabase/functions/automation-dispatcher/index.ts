@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const DISPATCHER_SECRET = Deno.env.get("DISPATCHER_SECRET")!;
 
 interface ScheduleRow {
   user_id: string;
@@ -75,6 +76,16 @@ function isDue(row: ScheduleRow, windowMinutes = 5): boolean {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Require shared secret — only the pg_cron job (or service callers) may invoke this.
+  const providedSecret = req.headers.get("x-dispatcher-secret");
+  const isServiceCall = req.headers.get("x-internal-secret") === SUPABASE_SERVICE_ROLE_KEY;
+  if (!isServiceCall && providedSecret !== DISPATCHER_SECRET) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
