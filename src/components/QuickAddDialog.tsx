@@ -7,20 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask } from "@/hooks/useTasks";
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from "@/lib/priority";
-import { z } from "zod";
 
-const schema = z.object({
-  title: z.string().trim().min(1, "Title required").max(200),
-  description: z.string().trim().max(2000).optional(),
-  priority: z.enum(["urgent", "high", "medium", "low"]),
-  due_date: z.string().optional(),
-});
-
-interface Props {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  defaultPriority?: Priority;
-}
+interface Props { open: boolean; onOpenChange: (v: boolean) => void; defaultPriority?: Priority; }
 
 export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" }: Props) {
   const create = useCreateTask();
@@ -28,30 +16,17 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>(defaultPriority);
   const [dueDate, setDueDate] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      setTitle("");
-      setDescription("");
-      setPriority(defaultPriority);
-      setDueDate("");
-      setError(null);
-    }
-  }, [open, defaultPriority]);
+  useEffect(() => { if (open) { setTitle(""); setDescription(""); setPriority(defaultPriority); setDueDate(""); } }, [open, defaultPriority]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = schema.safeParse({ title, description, priority, due_date: dueDate });
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Invalid input");
-      return;
-    }
+    if (!title.trim()) return;
     await create.mutateAsync({
-      title: parsed.data.title,
-      description: parsed.data.description || null,
-      priority: parsed.data.priority,
-      due_date: parsed.data.due_date ? new Date(parsed.data.due_date).toISOString() : null,
+      title: title.trim().slice(0, 200),
+      description: description.trim().slice(0, 5000) || null,
+      priority,
+      due_date: dueDate ? new Date(dueDate).toISOString() : null,
     });
     onOpenChange(false);
   }
@@ -59,31 +34,15 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>New task</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>New task</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="qa-title">Title</Label>
-            <Input
-              id="qa-title"
-              autoFocus
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What needs to be done?"
-              maxLength={200}
-            />
+            <Input id="qa-title" autoFocus value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="qa-desc">Description</Label>
-            <Textarea
-              id="qa-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add details (optional)"
-              rows={3}
-              maxLength={2000}
-            />
+            <Textarea id="qa-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -91,9 +50,7 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
               <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PRIORITIES.map((p) => (
-                    <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>
-                  ))}
+                  {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -102,12 +59,9 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
               <Input id="qa-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? "Creating…" : "Create task"}
-            </Button>
+            <Button type="submit" disabled={create.isPending}>{create.isPending ? "Creating…" : "Create"}</Button>
           </div>
         </form>
       </DialogContent>

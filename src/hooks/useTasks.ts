@@ -2,18 +2,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { useOrg } from "@/contexts/OrgContext";
 
 export type Task = Database["public"]["Tables"]["tasks"]["Row"];
 export type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 export type TaskUpdate = Database["public"]["Tables"]["tasks"]["Update"];
 
 export function useTasks() {
+  const { currentOrgId } = useOrg();
   return useQuery({
-    queryKey: ["tasks"],
+    enabled: !!currentOrgId,
+    queryKey: ["tasks", currentOrgId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
+        .eq("org_id", currentOrgId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Task[];
@@ -23,13 +27,15 @@ export function useTasks() {
 
 export function useCreateTask() {
   const qc = useQueryClient();
+  const { currentOrgId } = useOrg();
   return useMutation({
-    mutationFn: async (task: Omit<TaskInsert, "user_id">) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
+    mutationFn: async (task: Omit<TaskInsert, "user_id" | "created_by" | "org_id">) => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not authenticated");
+      if (!currentOrgId) throw new Error("No organization selected");
       const { data, error } = await supabase
         .from("tasks")
-        .insert({ ...task, user_id: userData.user.id })
+        .insert({ ...task, created_by: u.user.id, org_id: currentOrgId })
         .select()
         .single();
       if (error) throw error;
@@ -48,11 +54,7 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: async ({ id, ...patch }: TaskUpdate & { id: string }) => {
       const { data, error } = await supabase
-        .from("tasks")
-        .update(patch)
-        .eq("id", id)
-        .select()
-        .single();
+        .from("tasks").update(patch).eq("id", id).select().single();
       if (error) throw error;
       return data;
     },
@@ -68,10 +70,7 @@ export function useDeleteTask() {
       const { error } = await supabase.from("tasks").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task deleted");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["tasks"] }); toast.success("Task deleted"); },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -95,10 +94,7 @@ export function useBulkDelete() {
       const { error } = await supabase.from("tasks").delete().in("id", ids);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Tasks deleted");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["tasks"] }); toast.success("Tasks deleted"); },
     onError: (e: Error) => toast.error(e.message),
   });
 }
