@@ -6,6 +6,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const INTERNAL_FUNCTION_SECRET_ENV = Deno.env.get("INTERNAL_FUNCTION_SECRET") ?? "";
 
 interface SendRequest {
   user_id?: string;
@@ -71,7 +72,20 @@ Deno.serve(async (req) => {
   try {
     const body = (await req.json().catch(() => ({}))) as SendRequest;
     const trigger = body.trigger ?? "manual";
-    const isServiceCall = req.headers.get("x-internal-secret") === SUPABASE_SERVICE_ROLE_KEY;
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Resolve internal-call secret from app_config (source of truth) with env fallback
+    let internalSecret = INTERNAL_FUNCTION_SECRET_ENV;
+    const { data: cfg } = await admin
+      .from("app_config")
+      .select("value")
+      .eq("key", "internal_function_secret")
+      .maybeSingle();
+    if (cfg?.value) internalSecret = cfg.value;
+
+    const providedInternal = req.headers.get("x-internal-secret") ?? "";
+    const isServiceCall = !!internalSecret && providedInternal === internalSecret;
 
     let userId = body.user_id ?? null;
     if (!isServiceCall) {
@@ -90,8 +104,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: settings } = await admin
       .from("webhook_settings")
