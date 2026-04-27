@@ -7,6 +7,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const DISPATCHER_SECRET_ENV = Deno.env.get("DISPATCHER_SECRET") ?? "";
+const INTERNAL_FUNCTION_SECRET_ENV = Deno.env.get("INTERNAL_FUNCTION_SECRET") ?? "";
 
 interface ScheduleRow {
   user_id: string;
@@ -99,6 +100,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Resolve dedicated internal-function shared secret (separate from service role key)
+  let internalSecret = INTERNAL_FUNCTION_SECRET_ENV;
+  const { data: internalCfg } = await admin
+    .from("app_config")
+    .select("value")
+    .eq("key", "internal_function_secret")
+    .maybeSingle();
+  if (internalCfg?.value) internalSecret = internalCfg.value;
+
   try {
     const [{ data: emailRows }, { data: webhookRows }] = await Promise.all([
       admin
@@ -127,7 +137,7 @@ Deno.serve(async (req) => {
 
     const internalHeaders = {
       "Content-Type": "application/json",
-      "x-internal-secret": SUPABASE_SERVICE_ROLE_KEY,
+      "x-internal-secret": internalSecret,
     };
 
     const emailResults = await Promise.allSettled(
