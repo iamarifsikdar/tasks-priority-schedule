@@ -7,17 +7,26 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask } from "@/hooks/useTasks";
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from "@/lib/priority";
+import { AssigneePicker } from "./AssigneePicker";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props { open: boolean; onOpenChange: (v: boolean) => void; defaultPriority?: Priority; }
 
 export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" }: Props) {
   const create = useCreateTask();
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>(defaultPriority);
   const [dueDate, setDueDate] = useState("");
+  const [assignees, setAssignees] = useState<string[]>([]);
 
-  useEffect(() => { if (open) { setTitle(""); setDescription(""); setPriority(defaultPriority); setDueDate(""); } }, [open, defaultPriority]);
+  useEffect(() => {
+    if (open) {
+      setTitle(""); setDescription(""); setPriority(defaultPriority); setDueDate("");
+      setAssignees(user ? [user.id] : []);
+    }
+  }, [open, defaultPriority, user]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,6 +36,7 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
       description: description.trim().slice(0, 5000) || null,
       priority,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
+      assignees,
     });
     onOpenChange(false);
   }
@@ -58,6 +68,11 @@ export function QuickAddDialog({ open, onOpenChange, defaultPriority = "medium" 
               <Label htmlFor="qa-due">Due date</Label>
               <Input id="qa-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assignees</Label>
+            <AssigneePicker value={assignees} onChange={setAssignees} />
+            <p className="text-[11px] text-muted-foreground">Defaults to you. Add teammates to share the task.</p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>

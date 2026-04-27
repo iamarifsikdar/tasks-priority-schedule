@@ -29,20 +29,34 @@ export function useCreateTask() {
   const qc = useQueryClient();
   const { currentOrgId } = useOrg();
   return useMutation({
-    mutationFn: async (task: Omit<TaskInsert, "user_id" | "created_by" | "org_id">) => {
+    mutationFn: async (
+      task: Omit<TaskInsert, "user_id" | "created_by" | "org_id"> & { assignees?: string[] },
+    ) => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not authenticated");
       if (!currentOrgId) throw new Error("No organization selected");
+      const { assignees, ...taskFields } = task;
       const { data, error } = await supabase
         .from("tasks")
-        .insert({ ...task, created_by: u.user.id, org_id: currentOrgId })
+        .insert({ ...taskFields, created_by: u.user.id, org_id: currentOrgId })
         .select()
         .single();
       if (error) throw error;
+      // Default to self-assign if no assignees provided
+      const finalAssignees = (assignees && assignees.length > 0) ? assignees : [u.user.id];
+      const rows = finalAssignees.map((assignee_id) => ({
+        task_id: data.id,
+        org_id: currentOrgId,
+        assignee_id,
+        assigned_by: u.user!.id,
+      }));
+      const { error: aErr } = await supabase.from("task_assignments").insert(rows);
+      if (aErr) throw aErr;
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["task-assignees"] });
       toast.success("Task created");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -52,13 +66,31 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...patch }: TaskUpdate & { id: string }) => {
+    mutationFn: async ({ id, assignees, ...patch }: TaskUpdate & { id: string; assignees?: string[] }) => {
       const { data, error } = await supabase
         .from("tasks").update(patch).eq("id", id).select().single();
       if (error) throw error;
+      if (assignees) {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) throw new Error("Not authenticated");
+        // Replace assignees: delete existing, insert new
+        await supabase.from("task_assignments").delete().eq("task_id", id);
+        const finalAssignees = assignees.length > 0 ? assignees : [u.user.id];
+        const rows = finalAssignees.map((assignee_id) => ({
+          task_id: id,
+          org_id: data.org_id,
+          assignee_id,
+          assigned_by: u.user!.id,
+        }));
+        const { error: aErr } = await supabase.from("task_assignments").insert(rows);
+        if (aErr) throw aErr;
+      }
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["task-assignees"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }

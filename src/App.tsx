@@ -16,6 +16,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AppShell } from "./components/AppShell";
+import { OrgProvider } from "./contexts/OrgContext";
+import Onboarding from "./pages/Onboarding.tsx";
+import InviteAccept from "./pages/InviteAccept.tsx";
+import Team from "./pages/Team.tsx";
 
 const queryClient = new QueryClient();
 
@@ -27,10 +31,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
+            <OrgProvider>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/invite/:token" element={<InviteAccept />} />
               <Route
                 path="/app"
                 element={
@@ -64,6 +71,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/app/team"
+                element={
+                  <ProtectedRoute>
+                    <AppShell><Team /></AppShell>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/app/automation"
                 element={
                   <ProtectedRoute>
@@ -88,7 +103,8 @@ const App = () => (
                 }
               />
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </OrgProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
