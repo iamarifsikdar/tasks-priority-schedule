@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CheckSquare, LayoutDashboard, ListTodo, Settings, History, LogOut, Plus, Menu, X, Moon, Sun, Sparkles } from "lucide-react";
+import { CheckSquare, LayoutDashboard, ListTodo, Settings, History, LogOut, Plus, Menu, X, Moon, Sun, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const NAV = [
   { to: "/app/tasks", label: "All Tasks", icon: ListTodo },
   { to: "/app/tasks/pending", label: "Pending", icon: CheckSquare },
   { to: "/app/tasks/completed", label: "Completed", icon: CheckSquare },
+  { to: "/app/team", label: "Team", icon: Users },
   { to: "/app/automation", label: "Automation", icon: Sparkles },
   { to: "/app/logs", label: "Activity", icon: History },
   { to: "/app/settings", label: "Settings", icon: Settings },
