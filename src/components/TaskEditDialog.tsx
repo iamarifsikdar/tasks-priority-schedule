@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUpdateTask, type Task } from "@/hooks/useTasks";
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from "@/lib/priority";
+import { AssigneePicker } from "./AssigneePicker";
+import { useTaskAssignees } from "@/hooks/useOrgMembers";
 
 interface Props {
   task: Task;
@@ -16,11 +18,13 @@ interface Props {
 
 export function TaskEditDialog({ task, open, onOpenChange }: Props) {
   const update = useUpdateTask();
+  const { data: existingAssignees } = useTaskAssignees(open ? task.id : null);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [notes, setNotes] = useState(task.notes ?? "");
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [dueDate, setDueDate] = useState(task.due_date ? task.due_date.slice(0, 10) : "");
+  const [assignees, setAssignees] = useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -32,6 +36,10 @@ export function TaskEditDialog({ task, open, onOpenChange }: Props) {
     }
   }, [open, task]);
 
+  useEffect(() => {
+    if (open && existingAssignees) setAssignees(existingAssignees);
+  }, [open, existingAssignees]);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
@@ -42,6 +50,7 @@ export function TaskEditDialog({ task, open, onOpenChange }: Props) {
       notes: notes.trim().slice(0, 2000) || null,
       priority,
       due_date: dueDate ? new Date(dueDate).toISOString() : null,
+      assignees,
     });
     onOpenChange(false);
   }
@@ -81,6 +90,10 @@ export function TaskEditDialog({ task, open, onOpenChange }: Props) {
           <div className="space-y-1.5">
             <Label htmlFor="ed-notes">Notes</Label>
             <Textarea id="ed-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={2000} placeholder="Private notes (optional)" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assignees</Label>
+            <AssigneePicker value={assignees} onChange={setAssignees} />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
