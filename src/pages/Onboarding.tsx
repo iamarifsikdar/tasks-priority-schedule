@@ -36,13 +36,15 @@ export default function Onboarding() {
     e.preventDefault();
     if (!name.trim()) return;
     setBusy(true);
-    const { data, error } = await supabase.from("organizations")
-      .insert({ name: name.trim().slice(0, 80), slug: slugify(name), owner_id: user!.id })
-      .select().single();
+    const { data, error } = await supabase.rpc("create_organization", {
+      _name: name.trim().slice(0, 80),
+      _slug: slugify(name),
+    });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     await refresh();
-    if (data) setCurrentOrgId(data.id);
+    const org = Array.isArray(data) ? data[0] : data;
+    if (org?.id) setCurrentOrgId(org.id);
     toast.success("Organization created");
     navigate("/app");
   }

@@ -561,6 +561,24 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { _token: string }; Returns: string }
+      create_organization: {
+        Args: { _name: string; _slug: string }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_user_role: {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
