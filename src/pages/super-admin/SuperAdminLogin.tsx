@@ -40,7 +40,7 @@ export default function SuperAdminLogin() {
     }
     // Bootstrap if needed (one-time, server enforces "no admin yet")
     if (signedIn && email.toLowerCase() === SEEDED_EMAIL) {
-      await supabase.rpc("bootstrap_first_platform_admin", { _email: SEEDED_EMAIL }).catch(() => {});
+      try { await supabase.rpc("bootstrap_first_platform_admin", { _email: SEEDED_EMAIL }); } catch { /* noop */ }
     }
     await refresh();
     const { data: status } = await supabase.rpc("platform_admin_status");
