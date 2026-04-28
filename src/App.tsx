@@ -20,6 +20,16 @@ import { OrgProvider } from "./contexts/OrgContext";
 import Onboarding from "./pages/Onboarding.tsx";
 import InviteAccept from "./pages/InviteAccept.tsx";
 import Team from "./pages/Team.tsx";
+import { SuperAdminProvider } from "./contexts/SuperAdminContext";
+import { SuperAdminGuard } from "./components/SuperAdminGuard";
+import { SuperAdminShell } from "./components/SuperAdminShell";
+import SuperAdminLogin from "./pages/super-admin/SuperAdminLogin.tsx";
+import SuperAdminEnroll from "./pages/super-admin/SuperAdminEnroll.tsx";
+import SuperAdminOverview from "./pages/super-admin/SuperAdminOverview.tsx";
+import SuperAdminOrganizations from "./pages/super-admin/SuperAdminOrganizations.tsx";
+import SuperAdminUsers from "./pages/super-admin/SuperAdminUsers.tsx";
+import SuperAdminMetrics from "./pages/super-admin/SuperAdminMetrics.tsx";
+import SuperAdminLogs from "./pages/super-admin/SuperAdminLogs.tsx";
 
 const queryClient = new QueryClient();
 
@@ -32,12 +42,20 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <OrgProvider>
+              <SuperAdminProvider>
               <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/invite/:token" element={<InviteAccept />} />
+              <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+              <Route path="/super-admin/enroll" element={<SuperAdminEnroll />} />
+              <Route path="/super-admin" element={<SuperAdminGuard><SuperAdminShell><SuperAdminOverview /></SuperAdminShell></SuperAdminGuard>} />
+              <Route path="/super-admin/organizations" element={<SuperAdminGuard><SuperAdminShell><SuperAdminOrganizations /></SuperAdminShell></SuperAdminGuard>} />
+              <Route path="/super-admin/users" element={<SuperAdminGuard><SuperAdminShell><SuperAdminUsers /></SuperAdminShell></SuperAdminGuard>} />
+              <Route path="/super-admin/metrics" element={<SuperAdminGuard><SuperAdminShell><SuperAdminMetrics /></SuperAdminShell></SuperAdminGuard>} />
+              <Route path="/super-admin/logs" element={<SuperAdminGuard><SuperAdminShell><SuperAdminLogs /></SuperAdminShell></SuperAdminGuard>} />
               <Route
                 path="/app"
                 element={
@@ -104,6 +122,7 @@ const App = () => (
               />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </SuperAdminProvider>
             </OrgProvider>
           </AuthProvider>
         </BrowserRouter>
