@@ -162,6 +162,45 @@ export type Database = {
           },
         ]
       }
+      impersonation_logs: {
+        Row: {
+          action: string
+          admin_email: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          ip: string | null
+          reason: string | null
+          target_org_id: string
+          target_org_name: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          reason?: string | null
+          target_org_id: string
+          target_org_name?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          ip?: string | null
+          reason?: string | null
+          target_org_id?: string
+          target_org_name?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -399,6 +438,8 @@ export type Database = {
           name: string
           owner_id: string
           slug: string
+          suspended: boolean
+          suspended_at: string | null
           updated_at: string
         }
         Insert: {
@@ -408,6 +449,8 @@ export type Database = {
           name: string
           owner_id: string
           slug: string
+          suspended?: boolean
+          suspended_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -417,7 +460,69 @@ export type Database = {
           name?: string
           owner_id?: string
           slug?: string
+          suspended?: boolean
+          suspended_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_admin_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string
+          view_as_org_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          expires_at: string
+          id?: string
+          session_token: string
+          user_id: string
+          view_as_org_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          session_token?: string
+          user_id?: string
+          view_as_org_id?: string | null
+        }
+        Relationships: []
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          totp_enrolled_at: string | null
+          totp_secret_encrypted: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          totp_enrolled_at?: string | null
+          totp_secret_encrypted?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          totp_enrolled_at?: string | null
+          totp_secret_encrypted?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -561,6 +666,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { _token: string }; Returns: string }
+      bootstrap_first_platform_admin: {
+        Args: { _email: string }
+        Returns: string
+      }
       create_organization: {
         Args: { _name: string; _slug: string }
         Returns: {
@@ -570,6 +679,8 @@ export type Database = {
           name: string
           owner_id: string
           slug: string
+          suspended: boolean
+          suspended_at: string | null
           updated_at: string
         }
         SetofOptions: {
@@ -579,6 +690,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_view_as_org: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -595,6 +707,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_task_assignee: {
         Args: { _task_id: string; _user_id: string }
         Returns: boolean
@@ -610,6 +723,96 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
           status: Database["public"]["Enums"]["invite_status"]
         }[]
+      }
+      super_admin_create_organization: {
+        Args: { _name: string; _owner_email: string }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          slug: string
+          suspended: boolean
+          suspended_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      super_admin_delete_organization: {
+        Args: { _org_id: string }
+        Returns: boolean
+      }
+      super_admin_list_organizations: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          member_count: number
+          name: string
+          owner_email: string
+          owner_id: string
+          slug: string
+          suspended: boolean
+          task_count: number
+        }[]
+      }
+      super_admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          is_platform_admin: boolean
+          org_count: number
+          user_id: string
+        }[]
+      }
+      super_admin_metrics: { Args: never; Returns: Json }
+      super_admin_set_org_suspended: {
+        Args: { _org_id: string; _suspended: boolean }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          slug: string
+          suspended: boolean
+          suspended_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      super_admin_update_organization: {
+        Args: { _name: string; _org_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          name: string
+          owner_id: string
+          slug: string
+          suspended: boolean
+          suspended_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
