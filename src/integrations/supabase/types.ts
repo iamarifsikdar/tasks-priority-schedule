@@ -724,6 +724,57 @@ export type Database = {
           status: Database["public"]["Enums"]["invite_status"]
         }[]
       }
+      platform_admin_create_session: {
+        Args: { _hours?: number; _token: string }
+        Returns: {
+          created_at: string
+          ended_at: string | null
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string
+          view_as_org_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "platform_admin_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      platform_admin_end_session: { Args: never; Returns: undefined }
+      platform_admin_get_totp: { Args: never; Returns: string }
+      platform_admin_list_logs: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          admin_email: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          ip: string | null
+          reason: string | null
+          target_org_id: string
+          target_org_name: string | null
+          user_agent: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "impersonation_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      platform_admin_set_totp: {
+        Args: { _secret_b32: string }
+        Returns: undefined
+      }
+      platform_admin_status: { Args: never; Returns: Json }
+      platform_admin_stop_view_as: { Args: never; Returns: undefined }
+      platform_admin_view_as: {
+        Args: { _org_id: string; _reason?: string }
+        Returns: string
+      }
       super_admin_create_organization: {
         Args: { _name: string; _owner_email: string }
         Returns: {
